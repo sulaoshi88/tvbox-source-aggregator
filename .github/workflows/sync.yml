@@ -1,0 +1,32 @@
+name: 自动同步上游
+on:
+  schedule:
+    - cron: '0 2 * * *'   # 每天凌晨2点（UTC）自动跑
+  workflow_dispatch:      # 也可以手动点按钮触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: 配置 Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: 添加上游仓库
+        run: git remote add upstream https://github.com/qq148376839/tvbox-source-aggregator.git
+
+      - name: 拉取上游更新
+        run: git fetch upstream
+
+      - name: 合并上游 main
+        run: git merge upstream/main --no-edit
+
+      - name: 推送到自己的 fork
+        run: git push origin main
